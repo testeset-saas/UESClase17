@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SOC Elite Lab v2 | Robo de Identidad M365</title>
+    <style>
+        :root {
+            --bg-main: #060913;
+            --bg-card: #0b111e;
+            --bg-sidebar: #03060b;
+            --border-color: #1e2d42;
+            --text-normal: #d1d9e6;
+            --accent-blue: #00b4ff;
+            --accent-green: #2ecc71;
+            --accent-red: #e63946;
+            --accent-orange: #f4a261;
+            --accent-yellow: #e9c46a;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-normal);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent-blue), #0055ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav ul li {
+            padding: 0.8rem 1.5rem;
+            margin: 4px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar nav ul li:hover {
+            background: #111a2e;
+            border-left-color: var(--accent-blue);
+        }
+
+        .sidebar nav ul li.active {
+            background: #16253b;
+            border-left-color: var(--accent-blue);
+            color: white;
+            font-weight: 600;
+        }
+
+        .sidebar nav ul li.completed {
+            background: rgba(46, 204, 113, 0.1);
+            border-left-color: var(--accent-green);
+            color: #a3f0c0;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+            overflow-y: auto;
+            background: radial-gradient(circle at 50% 30%, #0d1527, var(--bg-main));
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid var(--accent-blue);
+            padding-left: 1rem;
+            color: white;
+        }
+
+        .mission-banner {
+            background: linear-gradient(135deg, #091a2f, #050e1a);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #16365c;
+            line-height: 1.6;
+        }
+
+        .mission-banner p {
+            margin-bottom: 0.8rem;
+        }
+
+        /* Dashboard & Metrics */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            margin: 1.5rem 0;
+        }
+
+        .metric-card {
+            background: #070c14;
+            border: 1px solid #142238;
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-align: center;
+            border-bottom: 3px solid var(--accent-blue);
+        }
+
+        .metric-card.critical { border-bottom-color: var(--accent-red); }
+        .metric-card.warning { border-bottom-color: var(--accent-orange); }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            margin-top: 0.5rem;
+        }
+
+        /* Alertas e Interactivos */
+        .alert-row {
+            background: #070d14;
+            margin: 1rem 0;
+            padding: 1.2rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid #ccc;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .severity-critica { border-left-color: var(--accent-red); }
+        .severity-alta { border-left-color: var(--accent-orange); }
+
+        /* Contenedores de Consola y Logs */
+        .log-container {
+            background: #03060a;
+            border: 1px solid #1a2636;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #39ecff;
+            overflow-x: auto;
+            margin: 1rem 0;
+            max-height: 250px;
+            white-space: pre-wrap;
+        }
+
+        .feedback-console {
+            background: #04080f;
+            border-left: 4px solid var(--accent-blue);
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: #b0d4ff;
+            min-height: 50px;
+        }
+
+        .feedback-console.success {
+            border-left-color: var(--accent-green);
+            background: rgba(46, 204, 113, 0.05);
+            color: #a3f0c0;
+        }
+
+        .feedback-console.error {
+            border-left-color: var(--accent-red);
+            background: rgba(230, 57, 70, 0.05);
+            color: #ff9999;
+        }
+
+        /* Form Controls */
+        button {
+            background: #162f4d;
+            border: 1px solid #234775;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #1f426b;
+            border-color: var(--accent-blue);
+        }
+
+        button.btn-success {
+            background: #144d29;
+            border-color: #1e733e;
+        }
+        button.btn-success:hover {
+            background: #1b6637;
+            border-color: var(--accent-green);
+        }
+
+        button.btn-main-action {
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkbox-container, .radio-container {
+            display: flex;
+            align-items: flex-start;
+            background: #090f1a;
+            padding: 0.9rem;
+            border-radius: 6px;
+            margin: 0.6rem 0;
+            border: 1px solid #142136;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .checkbox-container:hover, .radio-container:hover {
+            background: #10192b;
+        }
+
+        .checkbox-container input, .radio-container input {
+            margin-right: 12px;
+            margin-top: 3px;
+            transform: scale(1.1);
+        }
+
+        select, textarea, input[type="text"] {
+            background: #050910;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 0.4rem;
+        }
+        select:focus, textarea:focus, input[type="text"]:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        /* Progress Bar */
+        .progress-bar-wrapper {
+            width: 100%;
+            background: #162233;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-notify {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--accent-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-weight: 600;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <br>
+            <h2>🛡️ SOC CYBER RANGE</h2>
+            <nav>
+                <ul id="nav-menu">
+                    <li data-section="intro" class="nav-item active">📌 INTRO / OBJETIVOS</li>
+                    <li data-section="dashboard" class="nav-item">📊 DASHBOARD SOC</li>
+                    <li data-section="alert-queue" class="nav-item">🚨 COLA DE ALERTAS SIEM</li>
+                    <li data-section="triage" class="nav-item">🔍 TRIAGE TIER 1</li>
+                    <li data-section="investigation" class="nav-item">📈 INVESTIGACIÓN TIER 2</li>
+                    <li data-section="hunting" class="nav-item">🎯 HUNTING TIER 3</li>
+                    <li data-section="soar" class="nav-item">🤖 SOAR PLAYBOOK</li>
+                    <li data-section="stride" class="nav-item">🔐 MATRIZ STRIDE</li>
+                    <li data-section="mitre" class="nav-item">🧠 MITRE ATT&CK</li>
+                    <li data-section="kpis" class="nav-item">📉 KPIs DEL SOC</li>
+                    <li data-section="report" class="nav-item">📄 INFORME ISO 27035</li>
+                    <li data-section="quiz" class="nav-item">📝 EVALUACIÓN FINAL</li>
+                </ul>
+            </nav>
+        </div>
+        <div class="sidebar-footer">
+            <div class="progress-bar-wrapper">
+                <div class="progress-fill" id="lab-progress-fill"></div>
+            </div>
+            <div style="font-size:0.75rem; color:#8592a6; text-align:center" id="progress-text">Progreso: 0%</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="main-content"></div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+    // ESTADO GLOBAL DE PERSISTENCIA DEL LABORATORIO
+    const labState = {
+        currentSection: 'intro',
+        completed: {
+            intro: false, dashboard: false, 'alert-queue': false, triage: false,
+            investigation: false, hunting: false, soar: false, stride: false,
+            mitre: false, kpis: false, report: false, quiz: false
+        },
+        // Datos ingresados/guardados por los alumnos
+        data: {
+            triageChecks: [],
+            investigationEvidences: [],
+            soarActions: [],
+            strideSelections: {},
+            mitreSelections: {},
+            kpiSelections: {},
+            reportRecommendations: "1. Implementar MFA obligatorio en toda la organización.\n2. Ajustar reglas SIEM de Impossible Travel con umbrales estrictos.\n3. Campañas dirigidas de simulación de Phishing.\n4. Configurar alertas preventivas UEBA.",
+            quizSelections: {}
+        }
+    };
+
+    function showToast(message, isError = false) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast-notify';
+        toast.style.borderLeftColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
+        toast.innerHTML = isError ? `⚠️ ${message}` : `✅ ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'scale(0.9)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
+    function updateSidebarUI() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            const section = item.getAttribute('data-section');
+            item.classList.toggle('active', labState.currentSection === section);
+            item.classList.toggle('completed', labState.completed[section]);
+        });
+
+        const total = Object.keys(labState.completed).length;
+        const done = Object.values(labState.completed).filter(v => v === true).length;
+        const percent = Math.round((done / total) * 100);
+        
+        document.getElementById('lab-progress-fill').style.width = `${percent}%`;
+        document.getElementById('progress-text').innerText = `Progreso: ${percent}% (${done}/${total})`;
+    }
+
+    function markSectionComplete(sectionId) {
+        if (!labState.completed[sectionId]) {
+            labState.completed[sectionId] = true;
+            showToast(`Sección ${sectionId.toUpperCase()} completada de manera exitosa.`);
+            updateSidebarUI();
+        }
+    }
+
+    // PLANTILLAS DE RENDERIZADO Y LOGICA DE EVENTOS (ENCAPSULADAS)
+    const Views = {
+        intro: {
+            render: () => `
+                <div class="section-card">
+                    <div class="section-title">🎓 Laboratorio Avanzado: Incidente M365 - Credential Theft</div>
+                    <div class="mission-banner">
+                        <h3>📌 Contexto de la Operación del SOC</h3>
+                        <br>
+                        <p>Usted ha asumido el turno como <strong>Analista de Incidentes de Nivel 2 (Tier 2)</strong> dentro del SOC de una corporación financiera global. Durante la entrega de guardia, el sistema de correlación centralizado emite alertas de alta severidad que apuntan hacia un vector crítico de compromiso de identidad corporativa.</p>
+                        <p><strong>Vector Inicial:</strong> El colaborador Juan Pérez (<code>jperez@empresa.com</code>) ha sido víctima de una campaña dirigida de Spear-Phishing dirigida a recolectar tokens de sesión y contraseñas de Microsoft 365.</p>
+                        <p><strong>Marcos Técnicos a Validar:</strong> NIST CSF 2.0 (Detect, Respond), ISO/IEC 27035, Tácticas/Técnicas MITRE ATT&CK y Modelado de Amenazas STRIDE.</p>
+                    </div>
+                    <button id="btn-start-lab" class="btn-success btn-main-action">📌 Inicializar Entorno y Registrar Entrada de Guardia</button>
+                </div>
+            `,
+            init: () => {
+                document.getElementById('btn-start-lab').addEventListener('click', () => {
+                    markSectionComplete('intro');
+                    navigateTo('dashboard');
+                });
+            }
+        },
+
+        dashboard: {
+            render: () => `
+                <div class="section-card">
+                    <div class="section-title">📊 Panel Estratégico y Métricas de Operación</div>
+                    <p style="margin-bottom:1rem;">Revise el estado general del SIEM corporativo antes de interactuar con la cola de alertas entrantes.</p>
+                    <div class="dashboard-grid">
+                        <div class="metric-card"><div>Logs Procesados (24h)</div><div class="metric-value">1.42M</div></div>
+                        <div class="metric-card"><div>Eventos Correlacionados</div><div class="metric-value">12,119</div></div>
+                        <div class="metric-card critical"><div>Alertas Críticas Activas</div><div class="metric-value">2</div></div>
+                        <div class="metric-card warning"><div>Tasa Falsos Positivos</div><div class="metric-value">7.8%</div></div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="metric-card warning"><div>MTTD Promedio</div><div class="metric-value">2h 15m</div></div>
+                        <div class="metric-card"><div>MTTR (Playbooks SOAR)</div><div class="metric-value">36 min</div></div>
+                    </div>
+                    <button id="btn-confirm-dash" class="btn-success btn-main-action">✅ Archivar Revisión de Telemetría Global</button>
+                </div>
+            `,
+            init: () => {
+                document.getElementById('btn-confirm-dash').addEventListener('click', () => {
+                    markSectionComplete('dashboard');
+                    navigateTo('alert-queue');
+                });
+            }
+        },
+
+        'alert-queue': {
+            render: () => `
+                <div class="section-card">
+                    <div class="section-title">🚨 Cola de Eventos SIEM / Reglas de Correlación</div>
+                    <p style="margin-bottom:1rem;">Haga clic en analizar los detalles de los incidentes en cola para verificar los Indicadores de Compromiso (IoCs).</p>
+                    
+                    <div class="alert-row severity-critica">
+                        <div><strong>Event: Impossible Travel Detected</strong><br><small>User: jperez@empresa.com | Madrid -> Moscow | MITRE: T1078</small></div>
+                        <button class="btn-analyze" data-alert="impossible">🔍 Analizar Trazas</button>
+                    </div>
+                    <div class="alert-row severity-alta">
+                        <div><strong>Anomalous Inbox Rule Created</strong><br><small>Target: jperez@empresa.com | Action: Forward to external text/plain</small></div>
+                        <button class="btn-analyze" data-alert="inbox">🔍 Analizar Trazas</button>
+                    </div>
+
+                    <div id="queue-log-display" class="log-container" style="display:none;"></div>
+                    <button id="btn-complete-queue" class="btn-success btn-main-action" style="display:none;">✅ Declarar Cola como Evaluada</button>
+                </div>
+            `,
+            init: () => {
+                let clickedAlerts = new Set();
+                document.querySelectorAll('.btn-analyze').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const type = e.target.getAttribute('data-alert');
+                        const display = document.getElementById('queue-log-display');
+                        display.style.display = 'block';
+                        clickedAlerts.add(type);
+
+                        if(type === 'impossible') {
+                            display.innerText = `[SIEM_LOG: AUDIT_LOGON]\nTIMESTAMP: 2026-05-15T21:10:14Z\nUSER: jperez@empresa.com\nSTATUS: Successful Logon\nSOURCE_IP: 91.108.56.12 (Russian Federation)\nUSER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\nNOTE: Previous logon 45 mins ago from Madrid, Spain (IP: 84.120.44.19). Physical impossibility detected.`;
+                        } else {
+                            display.innerText = `[M365_EXCHANGE_AUDIT]\nTIMESTAMP: 2026-05-15T21:24:00Z\nOPERATION: New-InboxRule\nIDENTITY: jperez@empresa.com\\MaliciousExfilRule\nPARAMETERS: {ForwardTo: "attacker_mailbox@evil-domain.ru", DeleteMessage: true}`;
+                        }
+
+                        if(clickedAlerts.size >= 2) {
+                            document.getElementById('btn-complete-queue').style.display = 'block';
+                        }
+                    });
+                });
+
+                document.getElementById('btn-complete-queue').addEventListener('click', () => {
+                    markSectionComplete('alert-queue');
+                    navigateTo('triage');
+                });
+            }
+        },
+
+        triage: {
+            render: () => {
+                const checks = labState.data.triageChecks;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">🔍 Tier 1 - Clasificación Primaria (Triage)</div>
+                        <div class="mission-banner">
+                            <strong>Instrucciones:</strong> Complete la verificación forense sistemática del analista L1 antes de tomar una determinación operativa.
+                        </div>
+
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="chk1" ${checks.includes('chk1')?'checked':''}>
+                            <span>Verificar integridad de la alerta en el SIEM (Firma digital de la regla y correlación horaria correcta).</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="chk2" ${checks.includes('chk2')?'checked':''}>
+                            <span>Identificar perfiles y criticidad del activo afectado (jperez@empresa.com pertenece a Finanzas).</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="chk3" ${checks.includes('chk3')?'checked':''}>
+                            <span>Enriquecer IoC IP de Origen (91.108.56.12 catalogado en AlienVault OTX / VirusTotal como Proxy Activo).</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="chk4" ${checks.includes('chk4')?'checked':''}>
+                            <span>Corroborar estado del MFA (Tenant de Azure AD reporta: "MFA No Configurado / Legacy Auth").</span>
+                        </label>
+
+                        <div style="margin-top:1.5rem; display:flex; gap:10px;">
+                            <button id="btn-triage-escalate" style="background:var(--accent-red)">🚨 Escalar a Investigación L2</button>
+                            <button id="btn-triage-close" style="background:#222">❌ Cerrar Falso Positivo</button>
+                        </div>
+
+                        <div id="triage-console" class="feedback-console">Consola en espera de dictamen...</div>
+                        <button id="btn-complete-triage" class="btn-success btn-main-action" style="display:none;">✅ Proceder con la Investigación Avanzada</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                const saveState = () => {
+                    labState.data.triageChecks = [];
+                    if(document.getElementById('chk1').checked) labState.data.triageChecks.push('chk1');
+                    if(document.getElementById('chk2').checked) labState.data.triageChecks.push('chk2');
+                    if(document.getElementById('chk3').checked) labState.data.triageChecks.push('chk3');
+                    if(document.getElementById('chk4').checked) labState.data.triageChecks.push('chk4');
+                };
+
+                document.getElementById('btn-triage-escalate').addEventListener('click', () => {
+                    saveState();
+                    if(labState.data.triageChecks.length < 4) {
+                        const consoleDiv = document.getElementById('triage-console');
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ ERROR: No se puede escalar formalmente el ticket sin marcar todos los pasos requeridos en la lista de verificación del Triage.";
+                        showToast("Faltan pasos obligatorios", true);
+                        return;
+                    }
+                    const consoleDiv = document.getElementById('triage-console');
+                    consoleDiv.className = "feedback-console success";
+                    consoleDiv.innerText = "✅ CRITERIO CORRECTO: Evidencias técnicas sólidas recolectadas. Escalando incidente hacia el Tier 2 del SOC para contención.";
+                    document.getElementById('btn-complete-triage').style.display = 'block';
+                });
+
+                document.getElementById('btn-triage-close').addEventListener('click', () => {
+                    const consoleDiv = document.getElementById('triage-console');
+                    consoleDiv.className = "feedback-console error";
+                    consoleDiv.innerText = "❌ ERROR OPERACIONAL: Desestimar esta alerta vulneraría la confidencialidad de la red. Los IoC indican actividad hostil innegable.";
+                    showToast("Decisión Errónea", true);
+                });
+
+                document.getElementById('btn-complete-triage').addEventListener('click', () => {
+                    markSectionComplete('triage');
+                    navigateTo('investigation');
+                });
+            }
+        },
+
+        investigation: {
+            render: () => {
+                const evidences = labState.data.investigationEvidences;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">📈 Tier 2 - Línea de Tiempo Forense & Correlación de Evidencias</div>
+                        
+                        <div class="log-container" style="color:#a3f0c0">
+🚀 [TIMELINE ARTIFACTS GENERATED FROM EDR & AUDIT]
+t+00:00 - Phishing Email Delivery (Subject: "Action Required: Update M365 Security Settings")
+t+00:23 - Victim opened malicious URL and completed OAuth/Credential authorization grant.
+t+01:47 - Successful Logon Event from malicious IP 91.108.56.12 (Moscow).
+t+02:15 - SIEM triggered critical correlation alert 'Impossible Travel Rule'.
+t+02:31 - Attacker executed PowerShell script via API creating Exchange forwarding rule to external mailbox.
+t+02:35 - Bulk outbound Spam emails initiated (1200+ marketing/phishing links sent out via compromise account).
+                        </div>
+
+                        <p style="margin: 1rem 0;"><strong>Seleccione un mínimo de 3 evidencias concluyentes para estructurar el caso técnico:</strong></p>
+                        
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="ev-check" value="geo" ${evidences.includes('geo')?'checked':''}>
+                            <span>Autenticación exitosa desde área geográfica anómala (Moscú) en ventana de tiempo crítica.</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="ev-check" value="ip" ${evidences.includes('ip')?'checked':''}>
+                            <span>IP origen mapeada con alto Score de Maliciosidad en bases de Inteligencia de Amenazas externas.</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="ev-check" value="rule" ${evidences.includes('rule')?'checked':''}>
+                            <span>Modificación anómala del buzón (Regla oculta de reenvío automático de correos).</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="ev-check" value="mfa" ${evidences.includes('mfa')?'checked':''}>
+                            <span>Falta de un segundo factor de autenticación habilitado (MFA) como vulnerabilidad raíz.</span>
+                        </label>
+
+                        <button id="btn-verify-invest" class="btn-main-action">🔒 Validar Corpvs Evidentia</button>
+                        <div id="invest-console" class="feedback-console">Esperando validación de evidencias...</div>
+                        <button id="btn-complete-invest" class="btn-success btn-main-action" style="display:none;">✅ Archivar Análisis Forense e Ir a Hunting</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-verify-invest').addEventListener('click', () => {
+                    const checkedBoxes = document.querySelectorAll('.ev-check:checked');
+                    labState.data.investigationEvidences = Array.from(checkedBoxes).map(cb => cb.value);
+                    const consoleDiv = document.getElementById('invest-console');
+
+                    if(labState.data.investigationEvidences.length >= 3) {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "✅ EVIDENCIAS CONFIRMADAS: El informe técnico cuenta con el respaldo de logs cruzados del Active Directory e Inbox Rules. Procediendo con la contención.";
+                        document.getElementById('btn-complete-invest').style.display = 'block';
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ EVIDENCIAS INSUFICIENTES: El nivel de pruebas seleccionado no descarta el deslinde técnico de responsabilidades. Seleccione al menos 3 IoCs.";
+                    }
+                });
+
+                document.getElementById('btn-complete-invest').addEventListener('click', () => {
+                    markSectionComplete('investigation');
+                    navigateTo('hunting');
+                });
+            }
+        },
+
+        hunting: {
+            render: () => `
+                <div class="section-card">
+                    <div class="section-title">🎯 Tier 3 - Threat Hunting Proactivo Post-Incidente</div>
+                    <div class="mission-banner">
+                        El Analista Senior ejecuta hipótesis para determinar el alcance total de la intrusión dentro del ecosistema financiero. Pruebe cada hipótesis táctica:
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button id="btn-hunt-1" style="text-align:left">🔎 Hipótesis 1: ¿Existen otras identidades corporativas autenticadas desde el segmento IP 91.108.56.0/24?</button>
+                        <button id="btn-hunt-2" style="text-align:left">📬 Hipótesis 2: Buscar reglas de redirección de Exchange similares creadas en las últimas 48 horas.</button>
+                        <button id="btn-hunt-3" style="text-align:left">🌐 Hipótesis 3: Analizar logs de Proxy HTTP buscando conexiones de balizamiento (Beaconing) recurrente.</button>
+                    </div>
+
+                    <div id="hunting-console" class="feedback-console">Seleccione una hipótesis para correr la consulta KQL/SQL en el Data Lake...</div>
+                    <button id="btn-complete-hunting" class="btn-success btn-main-action" style="display:none;">✅ Completar Tareas de Hunting</button>
+                </div>
+            `,
+            init: () => {
+                let executed = 0;
+                const completeBtn = document.getElementById('btn-complete-hunting');
+                const consoleDiv = document.getElementById('hunting-console');
+
+                document.getElementById('btn-hunt-1').addEventListener('click', () => {
+                    consoleDiv.className = "feedback-console success";
+                    consoleDiv.innerText = "KQL QUERY: AADSignInEventsBeta | where IPAddress startswith '91.108.56.'\n\n[RESULTADOS]: Se identificaron 2 intentos adicionales sobre cuentas de directivos, bloqueados de forma nativa por políticas geográficas condicionales. No hay brechas paralelas.";
+                    executed++; if(executed >= 2) completeBtn.style.display = 'block';
+                });
+                document.getElementById('btn-hunt-2').addEventListener('click', () => {
+                    consoleDiv.className = "feedback-console success";
+                    consoleDiv.innerText = "KQL QUERY: CloudAppEvents | where Operation == 'New-InboxRule' | extend RuleName = RawEventData.Parameters.Name\n\n[RESULTADOS]: Alerta Roja: Se detectó 1 buzón de correo adicional (asistente_gerencia@empresa.com) con una regla idéntica inactiva. Se ingresa al flujo de aislamiento inmediato.";
+                    executed++; if(executed >= 2) completeBtn.style.display = 'block';
+                });
+                document.getElementById('btn-hunt-3').addEventListener('click', () => {
+                    consoleDiv.className = "feedback-console success";
+                    consoleDiv.innerText = "KQL QUERY: VMConnection | summarize Count = count() by RemoteIP, LocalIP\n\n[RESULTADOS]: Negativo. No se detectaron patrones de beaconing persistentes. El ataque se basó estrictamente en abuso de APIs de identidad, sin implantación de malware de persistencia.";
+                    executed++; if(executed >= 2) completeBtn.style.display = 'block';
+                });
+
+                completeBtn.addEventListener('click', () => {
+                    markSectionComplete('hunting');
+                    navigateTo('soar');
+                });
+            }
+        },
+
+        soar: {
+            render: () => {
+                const actions = labState.data.soarActions;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">🤖 Orquestación SOAR - Playbook Automatizado de Respuesta</div>
+                        <div class="mission-banner">
+                            Seleccione todas las contenciones críticas que se deben activar en bloque de forma simultánea a través de la API del SOAR:
+                        </div>
+
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="disable" ${actions.includes('disable')?'checked':''}><span>Deshabilitar Cuenta del Usuario Comprometido en Entra ID / On-Premise AD.</span></label>
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="revoke" ${actions.includes('revoke')?'checked':''}><span>Revocar de Forma Inmediata Todos los Tokens de Sesión OAuth Activos.</span></label>
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="reset" ${actions.includes('reset')?'checked':''}><span>Habilitar Solicitud de Cambio de Contraseña Mandatorio en Próximo Inicio de Sesión.</span></label>
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="rule" ${actions.includes('rule')?'checked':''}><span>Purgar de Forma Remota la Regla Maliciosa de Reenvío vía Script Automático de PowerShell.</span></label>
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="block" ${actions.includes('block')?'checked':''}><span>Inyectar la IP Atacante en las Reglas de Bloqueo del Firewall Perimetral Automatizado.</span></label>
+                        <label class="checkbox-container"><input type="checkbox" class="soar-check" value="mfa" ${actions.includes('mfa')?'checked':''}><span>Forzar el Enrolamiento Obligatorio de Multi-Factor Authentication en el Perfil.</span></label>
+
+                        <button id="btn-run-soar" class="btn-main-action" style="background:var(--accent-blue)">⚡ Desplegar Acciones del Playbook SOAR</button>
+                        <div id="soar-console" class="feedback-console">SOAR inactivo...</div>
+                        <button id="btn-complete-soar" class="btn-success btn-main-action" style="display:none;">✅ Continuar a Matriz STRIDE</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-run-soar').addEventListener('click', () => {
+                    const checked = document.querySelectorAll('.soar-check:checked');
+                    labState.data.soarActions = Array.from(checked).map(cb => cb.value);
+                    const consoleDiv = document.getElementById('soar-console');
+
+                    if(labState.data.soarActions.length === 6) {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "[OK] ORQUESTRACIÓN COMPLETA:\n- Cuenta Aislada.\n- Tokens Destruidos.\n- Reglas de Exchange Eliminadas.\n- IP Bloqueada a Nivel de Firewall Core.\nEstatus: Amenaza Contenida Exitosamente.";
+                        document.getElementById('btn-complete-soar').style.display = 'block';
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ ERROR EN LA RESPUESTA: Dejar fuera cualquiera de estas acciones estratégicas daría margen a que el atacante mantenga la persistencia en la cuenta o evada el aislamiento. Marque las 6 medidas operativas obligatorias.";
+                    }
+                });
+
+                document.getElementById('btn-complete-soar').addEventListener('click', () => {
+                    markSectionComplete('soar');
+                    navigateTo('stride');
+                });
+            }
+        },
+
+        stride: {
+            render: () => {
+                const s = labState.data.strideSelections;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">🔐 Modelado de Amenazas: Clasificación Matriz STRIDE</div>
+                        <p style="margin-bottom:1rem;">Asigne las propiedades de la amenaza para este incidente según los principios del marco STRIDE:</p>
+
+                        <div style="margin-bottom:1.2rem;">
+                            <label><strong>1. ¿Aplica la categoría de 'Spoofing' (Suplantación)?</strong></label>
+                            <select id="str-spoof">
+                                <option value="" ${!s.spoof?'selected':''}>--Seleccione respuesta--</option>
+                                <option value="si" ${s.spoof==='si'?'selected':''}>Sí: Hubo suplantación de identidad mediante el portal Phishing y robo de credenciales</option>
+                                <option value="no" ${s.spoof==='no'?'selected':''}>No: Las identidades nunca fueron falsificadas</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:1.2rem;">
+                            <label><strong>2. ¿Aplica 'Information Disclosure' (Divulgación de Información)?</strong></label>
+                            <select id="str-info">
+                                <option value="" ${!s.info?'selected':''}>--Seleccione respuesta--</option>
+                                <option value="si" ${s.info==='si'?'selected':''}>Sí: El acceso ilegítimo al buzón compromete la privacidad de los correos internos</option>
+                                <option value="no" ${s.info==='no'?'selected':''}>No: Los datos nunca estuvieron expuestos a la vista del atacante</option>
+                            </select>
+                        </div>
+
+                        <button id="btn-verify-stride" class="btn-main-action">🔐 Validar Asignación de Amenazas</button>
+                        <div id="stride-console" class="feedback-console">Esperando asignación...</div>
+                        <button id="btn-complete-stride" class="btn-success btn-main-action" style="display:none;">✅ Avanzar a Mapeo MITRE ATT&CK</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-verify-stride').addEventListener('click', () => {
+                    const spoof = document.getElementById('str-spoof').value;
+                    const info = document.getElementById('str-info').value;
+                    
+                    labState.data.strideSelections = { spoof, info };
+                    const consoleDiv = document.getElementById('stride-console');
+
+                    if(spoof === 'si' && info === 'si') {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "✅ CLASIFICACIÓN VÁLIDA: Excelentes fundamentos. El Spoofing sirvió de vector inicial y el Information Disclosure es el impacto crítico directo sobre el buzón de la financiera.";
+                        document.getElementById('btn-complete-stride').style.display = 'block';
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ CLASIFICACIÓN ERRÓNEA: Revise la taxonomía de la amenaza. Hubo una suplantación activa (M365 simulado) y la lectura/redirección exfiltra datos confidenciales corporativos.";
+                    }
+                });
+
+                document.getElementById('btn-complete-stride').addEventListener('click', () => {
+                    markSectionComplete('stride');
+                    navigateTo('mitre');
+                });
+            }
+        },
+
+        mitre: {
+            render: () => {
+                const m = labState.data.mitreSelections;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">🧠 Taxonomía MITRE ATT&CK Mapping</div>
+                        <p style="margin-bottom:1.5rem;">Asocie cada comportamiento observado del adversario con su identificador de técnica correspondiente dentro de la matriz táctica global:</p>
+
+                        <div style="margin-bottom:1rem;">
+                            <label><strong>Vector Inicial (Correo de Phishing):</strong></label>
+                            <select id="m-t1">
+                                <option value="">--Seleccione Técnica--</option>
+                                <option value="T1566.001" ${m.t1==='T1566.001'?'selected':''}>T1566.001 - Spearphishing Link</option>
+                                <option value="T1078" ${m.t1==='T1078'?'selected':''}>T1078 - Valid Accounts</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label><strong>Acceso Inicial (Uso de Credenciales legítimas robadas):</strong></label>
+                            <select id="m-t2">
+                                <option value="">--Seleccione Técnica--</option>
+                                <option value="T1110" ${m.t2==='T1110'?'selected':''}>T1110 - Brute Force Attacks</option>
+                                <option value="T1078" ${m.t2==='T1078'?'selected':''}>T1078 - Valid Accounts Access</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label><strong>Persistencia / Colección (Regla Automática de Reenvío):</strong></label>
+                            <select id="m-t3">
+                                <option value="">--Seleccione Técnica--</option>
+                                <option value="T1114.003" ${m.t3==='T1114.003'?'selected':''}>T1114.003 - Email Forwarding Rule</option>
+                                <option value="T1041" ${m.t3==='T1041'?'selected':''}>T1041 - Exfiltration Over C2 Channel</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label><strong>Impacto Final (Envío Masivo de Mensajería Spam):</strong></label>
+                            <select id="m-t4">
+                                <option value="">--Seleccione Técnica--</option>
+                                <option value="T1496" ${m.t4==='T1496'?'selected':''}>T1496 - Resource Hijacking (Abuso de recursos corporativos)</option>
+                                <option value="T1059" ${m.t4==='T1059'?'selected':''}>T1059 - Command and Scripting Interpreter</option>
+                            </select>
+                        </div>
+
+                        <button id="btn-verify-mitre" class="btn-main-action">🎯 Verificar Mapeo Técnico MITRE</button>
+                        <div id="mitre-console" class="feedback-console">Esperando mapeo de técnicas...</div>
+                        <button id="btn-complete-mitre" class="btn-success btn-main-action" style="display:none;">✅ Guardar Mapeo MITRE y Ver KPIs</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-verify-mitre').addEventListener('click', () => {
+                    const t1 = document.getElementById('m-t1').value;
+                    const t2 = document.getElementById('m-t2').value;
+                    const t3 = document.getElementById('m-t3').value;
+                    const t4 = document.getElementById('m-t4').value;
+
+                    labState.data.mitreSelections = { t1, t2, t3, t4 };
+                    const consoleDiv = document.getElementById('mitre-console');
+
+                    if(t1 === 'T1566.001' && t2 === 'T1078' && t3 === 'T1114.003' && t4 === 'T1496') {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "✅ MAPEO PERFECTO: Análisis estructural alineado al framework MITRE ATT&CK de forma precisa. Registros validados para Inteligencia de Amenazas corporativa.";
+                        document.getElementById('btn-complete-mitre').style.display = 'block';
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ INCORRECTO: Uno o más vectores de la matriz táctica no corresponden a las acciones reales documentadas en los logs forenses. Reevalúe.";
+                    }
+                });
+
+                document.getElementById('btn-complete-mitre').addEventListener('click', () => {
+                    markSectionComplete('mitre');
+                    navigateTo('kpis');
+                });
+            }
+        },
+
+        kpis: {
+            render: () => {
+                const k = labState.data.kpiSelections;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">📉 KPIs e Indicadores de Gestión Estratégica del SOC</div>
+                        <div class="mission-banner">
+                            <strong>Línea Base Actual:</strong> MTTD = 2h 15min | MTTR = 36min | Falsos Positivos = 7.8%
+                        </div>
+
+                        <div style="margin-bottom:1.2rem;">
+                            <label><strong>1. ¿Qué impacto directo tiene implementar MFA condicional en las métricas?</strong></label>
+                            <div class="radio-container"><label><input type="radio" name="rk1" value="a" ${k.rk1==='a'?'checked':''}> Reduce el MTTD global de la organización.</label></div>
+                            <div class="radio-container"><label><input type="radio" name="rk1" value="b" ${k.rk1==='b'?'checked':''}> Mitiga proactivamente el volumen de incidentes confirmados por robo de credenciales, reduciendo la superficie de exposición.</label></div>
+                        </div>
+
+                        <div style="margin-bottom:1.2rem;">
+                            <label><strong>2. ¿Qué arquitectura tecnológica impacta y disminuye de forma directa el MTTR?</strong></label>
+                            <div class="radio-container"><label><input type="radio" name="rk2" value="a" ${k.rk2==='a'?'checked':''}> Implementación de Flujos Automatizados en un Orquestador SOAR.</label></div>
+                            <div class="radio-container"><label><input type="radio" name="rk2" value="b" ${k.rk2==='b'?'checked':''}> Compra adicional de almacenamiento de Logs (Cold Storage SIEM).</label></div>
+                        </div>
+
+                        <button id="btn-verify-kpi" class="btn-main-action">💡 Auditar Respuestas KPIs</button>
+                        <div id="kpi-console" class="feedback-console">Esperando análisis métrico...</div>
+                        <button id="btn-complete-kpis" class="btn-success btn-main-action" style="display:none;">✅ Guardar y Redactar Informe ISO</button>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-verify-kpi').addEventListener('click', () => {
+                    const rk1 = document.querySelector('input[name="rk1"]:checked')?.value;
+                    const rk2 = document.querySelector('input[name="rk2"]:checked')?.value;
+
+                    labState.data.kpiSelections = { rk1, rk2 };
+                    const consoleDiv = document.getElementById('kpi-console');
+
+                    if(rk1 === 'b' && rk2 === 'a') {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "✅ EVALUACIÓN DE INGENIERÍA CORRECTA: El SOAR despliega contenciones en segundos (bajando el MTTR) y el MFA bloquea el vector de autenticación ilegítimo de raíz.";
+                        document.getElementById('btn-complete-kpis').style.display = 'block';
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ ANÁLISIS DE GESTIÓN DEFICIENTE: Las inversiones propuestas no corresponden con las mejoras en las métricas de respuesta. Analice de nuevo.";
+                    }
+                });
+
+                document.getElementById('btn-complete-kpis').addEventListener('click', () => {
+                    markSectionComplete('kpis');
+                    navigateTo('report');
+                });
+            }
+        },
+
+        report: {
+            render: () => `
+                <div class="section-card">
+                    <div class="section-title">📄 Generador de Resumen Ejecutivo - Directrices ISO/IEC 27035</div>
+                    <p style="margin-bottom:1rem;">Estructure las recomendaciones técnicas que serán presentadas ante el Comité de Riesgos e Infraestructura:</p>
+                    
+                    <div>
+                        <label>ID del Incidente de Seguridad:</label>
+                        <input type="text" id="rep-id" value="INC-2026-M365-8492" readonly style="color:#888;">
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <label>Recomendaciones de Remediación y Plan de Acción Post-Mortem (Editable):</label>
+                        <textarea id="rep-text" rows="6">${labState.data.reportRecommendations}</textarea>
+                    </div>
+
+                    <button id="btn-gen-report" class="btn-success btn-main-action">📑 Compilar y Firmar Resumen ISO 27035</button>
+                    <div id="report-console" class="feedback-console">Esperando compilación del reporte...</div>
+                    <button id="btn-complete-report" class="btn-success btn-main-action" style="display:none;">✅ Ir a la Evaluación Teórica Final</button>
+                </div>
+            `,
+            init: () => {
+                document.getElementById('btn-gen-report').addEventListener('click', () => {
+                    const text = document.getElementById('rep-text').value;
+                    labState.data.reportRecommendations = text;
+                    
+                    const consoleDiv = document.getElementById('report-console');
+                    consoleDiv.className = "feedback-console success";
+                    consoleDiv.innerText = `[REPORTE ISO 27035 GENERADO CORRECTAMENTE]\nSTATUS: COMPILADO Y VALIDADO\nRemediación Registrada:\n${text}\n\nNota: Documento listo para auditoría de cumplimiento regulatorio.`;
+                    document.getElementById('btn-complete-report').style.display = 'block';
+                });
+
+                document.getElementById('btn-complete-report').addEventListener('click', () => {
+                    markSectionComplete('report');
+                    navigateTo('quiz');
+                });
+            }
+        },
+
+        quiz: {
+            render: () => {
+                const s = labState.data.quizSelections;
+                return `
+                    <div class="section-card">
+                        <div class="section-title">📝 Evaluación de Suficiencia Técnica - Cierre de Laboratorio</div>
+                        <p style="margin-bottom:1.5rem;">Responda las preguntas de control de conocimiento para la acreditación final:</p>
+
+                        <div class="kpi-panel" style="margin-bottom:1.5rem;">
+                            <p><strong>1. ¿Qué equipo operativo es el responsable directo de realizar el análisis forense profundo y la correlación avanzada (Tier 2)?</strong></p>
+                            <div class="radio-container"><label><input type="radio" name="qz1" value="t1" ${s.qz1==='t1'?'checked':''}> Analistas de Monitoreo Inicial Tier 1</label></div>
+                            <div class="radio-container"><label><input type="radio" name="qz1" value="t2" ${s.qz1==='t2'?'checked':''}> Analistas de Respuesta e Investigación Tier 2</label></div>
+                        </div>
+
+                        <div class="kpi-panel" style="margin-bottom:1.5rem;">
+                            <p><strong>2. ¿Cuál es el control técnico mitigante prioritario e inmediato tras descubrir el compromiso masivo de cuentas porPhishing?</strong></p>
+                            <div class="radio-container"><label><input type="radio" name="qz2" value="ip" ${s.qz2==='ip'?'checked':''}> Bloqueo continuo de direcciones IP dinámicas atacantes.</label></div>
+                            <div class="radio-container"><label><input type="radio" name="qz2" value="rv" ${s.qz2==='rv'?'checked':''}> Invalidación de sesiones OAuth activas y aprovisionamiento obligatorio de Multi-Factor Authentication.</label></div>
+                        </div>
+
+                        <button id="btn-submit-quiz" class="btn-main-action" style="background:var(--accent-green)">🎯 Evaluar Respuestas Académicas</button>
+                        <div id="quiz-console" class="feedback-console">Esperando respuestas...</div>
+                    </div>
+                `;
+            },
+            init: () => {
+                document.getElementById('btn-submit-quiz').addEventListener('click', () => {
+                    const qz1 = document.querySelector('input[name="qz1"]:checked')?.value;
+                    const qz2 = document.querySelector('input[name="qz2"]:checked')?.value;
+
+                    labState.data.quizSelections = { qz1, qz2 };
+                    const consoleDiv = document.getElementById('quiz-console');
+
+                    if(qz1 === 't2' && qz2 === 'rv') {
+                        consoleDiv.className = "feedback-console success";
+                        consoleDiv.innerText = "🎯 CALIFICACIÓN: 100/100 (Aprobado)\n¡Excelente desempeño, analista! Ha demostrado dominio del ciclo de vida de los incidentes, marcos teóricos y contenciones tácticas en la nube.";
+                        markSectionComplete('quiz');
+                    } else {
+                        consoleDiv.className = "feedback-console error";
+                        consoleDiv.innerText = "❌ REPASO REQUERIDO: Respuestas incorrectas detectadas. Revise los logs, el rol de los analistas e intente nuevamente la evaluación para cerrar el laboratorio.";
+                    }
+                });
+            }
+        }
+    };
+
+    // MOTOR DE ENRUTAMIENTO DE PANTALLAS INTERACTIVAS
+    function navigateTo(sectionId) {
+        const view = Views[sectionId];
+        if (view) {
+            labState.currentSection = sectionId;
+            const container = document.getElementById('main-content');
+            
+            // Inyectar HTML al DOM
+            container.innerHTML = view.render();
+            // Inicializar Listeners dinámicos de forma segura
+            view.init();
+            
+            updateSidebarUI();
+            container.scrollTop = 0;
+        }
+    }
+
+    function initApplication() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.getAttribute('data-section');
+                navigateTo(target);
+            });
+        });
+
+        // Carga inicial por defecto
+        navigateTo('intro');
+    }
+
+    window.addEventListener('DOMContentLoaded', initApplication);
+</script>
+</body>
+</html>
